@@ -2,6 +2,7 @@ package mcpgrafana
 
 import (
 	"bytes"
+	"crypto/rand"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -12,7 +13,7 @@ import (
 )
 
 func TestRequireBearerToken(t *testing.T) {
-	const token = "s3cret-caller-token"
+	token := rand.Text()
 
 	// Downstream handler records whether it was reached.
 	var reached bool
@@ -73,7 +74,7 @@ func TestRequireBearerToken_EmptyExpectedFailsClosed(t *testing.T) {
 // Rejections must be logged for audit, but the token value must never appear in
 // the logs.
 func TestRequireBearerToken_LogsRejectionWithoutLeakingToken(t *testing.T) {
-	const secret = "the-expected-secret-token"
+	secret := rand.Text()
 	const presented = "the-wrong-presented-token"
 
 	var buf bytes.Buffer
@@ -103,7 +104,7 @@ func TestRequireBearerToken_LogsRejectionWithoutLeakingToken(t *testing.T) {
 
 // A successful (authenticated) request must not emit a rejection log line.
 func TestRequireBearerToken_NoLogOnSuccess(t *testing.T) {
-	const secret = "the-expected-secret-token"
+	secret := rand.Text()
 
 	var buf bytes.Buffer
 	logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelWarn}))
@@ -125,7 +126,7 @@ func TestRequireBearerToken_NoLogOnSuccess(t *testing.T) {
 // After successful authentication the caller's Authorization header must be
 // stripped so it can never be forwarded to Grafana or folded into a cache key.
 func TestRequireBearerToken_StripsAuthorizationAfterAuth(t *testing.T) {
-	const token = "s3cret-caller-token"
+	token := rand.Text()
 
 	var seenAuth string
 	var reached bool
@@ -149,7 +150,7 @@ func TestRequireBearerToken_StripsAuthorizationAfterAuth(t *testing.T) {
 // CORS preflight must be allowed through unauthenticated so browser clients can
 // negotiate; it carries no bearer token and performs no MCP operation.
 func TestRequireBearerToken_AllowsOPTIONSPreflight(t *testing.T) {
-	const token = "s3cret-caller-token"
+	token := rand.Text()
 
 	var reached bool
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

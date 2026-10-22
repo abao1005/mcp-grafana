@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"log/slog"
 	"net"
@@ -770,7 +771,7 @@ func TestHTTPAllowedHostsLoopbackProxy(t *testing.T) {
 			env = append(env, value)
 		}
 	}
-	const token = "loopback-proxy-test-token"
+	token := rand.Text()
 	env = append(env, "GRAFANA_URL=http://127.0.0.1:1", "GRAFANA_ORG_ID=1", "MCP_GRAFANA_SERVER_TOKEN="+token)
 
 	cases := []struct {
